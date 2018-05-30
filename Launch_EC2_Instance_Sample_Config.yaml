@@ -1,0 +1,82 @@
+Description: >
+  This will create an instance and assing a public ip, can be used to update the instance too.
+  This uses the existing VPC and SUBNETS.
+
+Parameters:
+  VakeesVPC:
+    Description: VPC used for launching this instance
+    Type: String
+    Default: vpc-XXXXXXXX  #Replace this with the already existing VPC
+
+  VakeesSubnet:
+    Description: subnet used for launching this instance
+    Type: String
+    Default: subnet-XXXXXXXX #Replace it with the already existing subnet
+
+  Vakeeskey:
+    Description: Key used for connecting the instance
+    Type: String
+    Default: vakees1424 #Please use the key that you have created
+  VakeesSecurityGroupName:
+    Description: Name of the Security group to create
+    Type: String
+    Default: VakeesSecurityGroup
+
+Mappings: 
+  RegionMap: 
+    us-west-2: 
+      "32": "ami-c9c7978c" #Ubuntu 16 for 32 Arch provided by Amazon. Please replace it with the AMI created by you.
+      "64": "ami-4e79ed36" #Ubuntu 16 for 64 Arch provided by Amazon. Please replace it with the AMI created by you.
+
+Resources:  
+  VakeesSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: !Ref VakeesSecurityGroupName
+      GroupName: !Ref VakeesSecurityGroupName    
+      VpcId: !Ref VakeesVPC
+      SecurityGroupIngress:
+        -
+          IpProtocol: tcp
+          FromPort: 8080
+          ToPort: 8080
+          CidrIp: 0.0.0.0/0
+        -
+          IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: 0.0.0.0/0
+        -
+          IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 0.0.0.0/0
+        -
+          IpProtocol: tcp
+          FromPort: 29418
+          ToPort: 29418
+          CidrIp: 0.0.0.0/0
+#Additional port's can be created and added here.
+
+  VakeesEC2Instance: 
+    Type: "AWS::EC2::Instance"
+    Properties: 
+      ImageId: !FindInMap [RegionMap, !Ref "AWS::Region", 64]
+      InstanceType: t2.micro  #Please create a Mappings/list I have mentioned here a free tier eligible instance
+      KeyName: !Ref Vakeeskey
+      NetworkInterfaces:
+        - GroupSet:
+            - !Ref VakeesSecurityGroup
+          AssociatePublicIpAddress: true
+          DeviceIndex: '0'
+          SubnetId: !Ref VakeesSubnet
+      Tags:
+        -
+          Key: Name
+          Value: Vakees-Cloudformation #This will be the name of the instance. Additional tags can be created here.
+
+Outputs:
+  VakeesCloudwatchDashboard:
+    Description: "EC2 instance is created/updated using cloudformation template"
+    Value: !Sub |
+      "https://${AWS::Region}.console.aws.amazon.com/ec2/v2/home?region=${AWS::Region}#Instances:sort=instanceState"
