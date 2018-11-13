@@ -37,4 +37,6 @@ ___
 ```
 aws cloudformation create-change-set --stack-name ec2-test-stack --template-body file://./Launch_EC2_Instance_Sample_Config.yaml --change-set-name port-update --description "updating the lambda function name"
 ```
-
+Author Information
+------------------
+[vakees](https://github.com/vakees1424)
